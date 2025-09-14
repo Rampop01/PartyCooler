@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@blackbox-vision/react-qr-reader':
+        specifier: ^5.0.0
+        version: 5.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@civic/auth':
         specifier: ^0.9.5
         version: 0.9.5(@types/react@18.3.23)(express@5.1.0)(next@14.2.16(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.2)
@@ -255,6 +258,12 @@ packages:
   '@babel/types@7.28.2':
     resolution: {integrity: sha512-ruv7Ae4J5dUYULmeXw1gmb7rYRz57OWCPM57pHojnLq/3Z1CK2lNSLTCVjxVk1F/TZHwOZZrOWi0ur95BbLxNQ==}
     engines: {node: '>=6.9.0'}
+
+  '@blackbox-vision/react-qr-reader@5.0.0':
+    resolution: {integrity: sha512-VLNKwwJTv4UX1inUNgt2aGC2yIhKBYptW9EOhn7Nq//WzjD5KvHG7WR48HTzGUZ2s/EA0XlxZSfKOarHV1Vb/A==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0
+      react-dom: ^16.8.0 || ^17.0.0
 
   '@civic/auth-verify@0.0.4':
     resolution: {integrity: sha512-4Gnprwa8wQsCXM9mqRKAec+SMZ2eTrXZAOZrCjD6WA14qsmauLNHJvkFBDR1s3lBu/UIvjUSXzRZseU5vEALmw==}
@@ -2797,6 +2806,13 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
+
+  '@blackbox-vision/react-qr-reader@5.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@zxing/browser': 0.0.7(@zxing/library@0.18.6)
+      '@zxing/library': 0.18.6
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@civic/auth-verify@0.0.4':
     dependencies:
