@@ -1,4 +1,11 @@
-"use client"
+  "use client"
+  // Helper to check if event has ended
+  const isEventEnded = event => {
+    if (!event) return false;
+    const now = new Date();
+    return event.date.toDate() < now;
+  };
+
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -81,44 +88,54 @@ export default function EditEventPage() {
     }
   }
 
-  if (loading) {
+  // Custom multi-role guard: allow ORGANIZER or SCANNER
+  const { civicUser, firestoreUser, isLoading: authLoading } = require("@/contexts/auth-context").useAuth();
+  const allowedRoles = ["ORGANIZER", "SCANNER"];
+  if (authLoading || loading) {
     return (
-      <AuthGuard requiredRole="ORGANIZER">
-        <div className="min-h-screen bg-black">
-          <Navbar />
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
-          </div>
-        </div>
-      </AuthGuard>
-    )
-  }
-
-  if (!event) {
-    return (
-      <AuthGuard requiredRole="ORGANIZER">
-        <div className="min-h-screen bg-black">
-          <Navbar />
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            <Card className="bg-black/40 backdrop-blur-sm border border-yellow-500/20">
-              <CardContent className="text-center py-12">
-                <h2 className="text-2xl font-bold text-white mb-2">Event Not Found</h2>
-                <p className="text-gray-300">The event you're trying to edit doesn't exist.</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </AuthGuard>
-    )
-  }
-
-  return (
-    <AuthGuard requiredRole="ORGANIZER">
       <div className="min-h-screen bg-black">
         <Navbar />
-        
-        <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <Link href="/dashboard">
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+        </div>
+      </div>
+    );
+  }
+  if (!civicUser || !firestoreUser || !allowedRoles.includes(firestoreUser.role)) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <Card className="w-full max-w-md bg-black/40 backdrop-blur-sm border border-yellow-500/20">
+          <CardHeader className="text-center">
+            <CardTitle className="text-xl font-bold text-red-400">Access Denied</CardTitle>
+            <p className="text-gray-300">
+              You don't have permission to access this page. Required role: ORGANIZER or SCANNER
+            </p>
+          </CardHeader>
+        </Card>
+      </div>
+    );
+  }
+  if (!event) {
+    return (
+      <div className="min-h-screen bg-black">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <Card className="bg-black/40 backdrop-blur-sm border border-yellow-500/20">
+            <CardContent className="text-center py-12">
+              <h2 className="text-2xl font-bold text-white mb-2">Event Not Found</h2>
+              <p className="text-gray-300">The event you're trying to edit doesn't exist.</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="min-h-screen bg-black">
+      <Navbar />
+      
+      <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Link href="/dashboard">
             <Button variant="ghost" className="mb-6 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
@@ -130,6 +147,11 @@ export default function EditEventPage() {
               <CardTitle className="text-2xl font-bold text-white">Edit Event</CardTitle>
             </CardHeader>
             <CardContent>
+              {isEventEnded(event) && (
+                <div className="mb-4 p-4 bg-red-900/40 border border-red-500/30 rounded text-red-300 text-center">
+                  This event has ended and can no longer be edited.
+                </div>
+              )}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <Label htmlFor="title" className="text-gray-300">Event Title</Label>
@@ -140,6 +162,7 @@ export default function EditEventPage() {
                     onChange={handleChange} 
                     required 
                     className="bg-black/20 border-yellow-500/30 text-white"
+                    disabled={isEventEnded(event)}
                   />
                 </div>
 
@@ -153,6 +176,7 @@ export default function EditEventPage() {
                     required 
                     rows={4}
                     className="bg-black/20 border-yellow-500/30 text-white"
+                    disabled={isEventEnded(event)}
                   />
                 </div>
 
@@ -165,6 +189,7 @@ export default function EditEventPage() {
                     onChange={handleChange} 
                     required 
                     className="bg-black/20 border-yellow-500/30 text-white"
+                    disabled={isEventEnded(event)}
                   />
                 </div>
 
@@ -179,6 +204,7 @@ export default function EditEventPage() {
                       onChange={handleChange} 
                       required 
                       className="bg-black/20 border-yellow-500/30 text-white"
+                      disabled={isEventEnded(event)}
                     />
                   </div>
                   <div>
@@ -191,13 +217,14 @@ export default function EditEventPage() {
                       onChange={handleChange} 
                       required 
                       className="bg-black/20 border-yellow-500/30 text-white"
+                      disabled={isEventEnded(event)}
                     />
                   </div>
                 </div>
 
                 <Button 
                   type="submit" 
-                  disabled={updating} 
+                  disabled={updating || isEventEnded(event)} 
                   className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold shadow-sm hover:shadow-sm hover:shadow-yellow-500/25 transition-all duration-500 transform hover:scale-105 hover:-translate-y-2"
                 >
                   {updating ? "Updating Event..." : "Update Event"}
@@ -205,8 +232,10 @@ export default function EditEventPage() {
               </form>
             </CardContent>
           </Card>
+
         </main>
       </div>
-    </AuthGuard>
-  )
+  );
 }
+
+

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useUser } from "@civic/auth/react"
-import { getUserTickets, getEventById, type Ticket, type Event } from "@/lib/firestore"
+import { getUserTickets, getEventById, getUserByCivicId, type Ticket, type Event } from "@/lib/firestore"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Navbar } from "@/components/layout/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,6 +21,7 @@ export default function MyTicketsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedTicket, setSelectedTicket] = useState<TicketWithEvent | null>(null)
 
+
   useEffect(() => {
     if (civicUser?.id) {
       loadUserTickets()
@@ -31,8 +32,14 @@ export default function MyTicketsPage() {
     if (!civicUser?.id) return
 
     try {
-      const userTickets = await getUserTickets(civicUser.id)
-      
+      // Get Firestore user by Civic ID
+      const firestoreUser = await getUserByCivicId(civicUser.id)
+      if (!firestoreUser?.id) {
+        setTickets([])
+        setLoading(false)
+        return
+      }
+      const userTickets = await getUserTickets(firestoreUser.id)
       // Get event details for each ticket
       const ticketsWithEvents = await Promise.all(
         userTickets.map(async (ticket) => {
@@ -43,7 +50,6 @@ export default function MyTicketsPage() {
           }
         })
       )
-
       setTickets(ticketsWithEvents)
     } catch (error) {
       console.error("Error loading tickets:", error)

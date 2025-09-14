@@ -2,30 +2,43 @@
 import { useAuth } from "@/contexts/auth-context"
 import { AuthGuard } from "@/components/auth/auth-guard"
 import { Navbar } from "@/components/layout/navbar"
+
 import { AttendeesDashboard } from "@/components/dashboard/attendees-dashboard"
 import { OrganizerDashboard } from "@/components/dashboard/organizer-dashboard"
 import { ScannerDashboard } from "@/components/dashboard/scanner-dashboard"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+
 
 export default function DashboardPage() {
   const { civicUser, firestoreUser, isLoading } = useAuth()
+  const [adminView, setAdminView] = useState<'organizer' | 'scanner'>('organizer')
 
   const renderDashboard = () => {
-    // Defer rendering until auth (and Firestore user) has settled to prevent stale/default role
     if (!civicUser || isLoading) return null
-
-    // Use firestoreUser role if available, otherwise default to ORGANIZER
     const userRole = firestoreUser?.role || "ORGANIZER"
 
-    switch (userRole) {
-      case "ATTENDEE":
-        return <AttendeesDashboard />
-      case "ORGANIZER":
-        return <OrganizerDashboard />
-      case "SCANNER":
-        return <ScannerDashboard />
-      default:
-        return <OrganizerDashboard />
+    if (userRole === "ATTENDEE") {
+      return <AttendeesDashboard />
     }
+
+    // For ORGANIZER and SCANNER roles, show toggle and default to OrganizerDashboard
+    if (userRole === "ORGANIZER" || userRole === "SCANNER") {
+      return (
+        <>
+          <div className="flex justify-end mb-4">
+            <Button
+              variant="outline"
+              onClick={() => setAdminView(adminView === 'organizer' ? 'scanner' : 'organizer')}
+            >
+              {adminView === 'organizer' ? 'Switch to Scanner Dashboard' : 'Back to Organizer Dashboard'}
+            </Button>
+          </div>
+          {adminView === 'organizer' ? <OrganizerDashboard /> : <ScannerDashboard />}
+        </>
+      )
+    }
+    return <OrganizerDashboard />
   }
 
   return (

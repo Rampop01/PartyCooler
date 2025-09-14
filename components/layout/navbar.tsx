@@ -7,9 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Plus, Scan, Menu, X } from "lucide-react"
 import { useState } from "react"
-
 export function Navbar() {
-  const { civicUser } = useAuth()
+  const { civicUser, firestoreUser } = useAuth()
   const [open, setOpen] = useState(false)
 
   return (
@@ -39,12 +38,15 @@ export function Navbar() {
                   My Tickets
                 </Button>
               </Link>
-              <Link href="/scanner">
-                <Button variant="outline" className="border-yellow-400/50 text-yellow-200 bg-black hover:text-white hover:bg-yellow-800/20 hover:border-yellow-400">
-                  <Scan className="h-4 w-4 mr-2" />
-                  Scanner
-                </Button>
-              </Link>
+              {/* Only show Scanner for ORGANIZER or SCANNER roles */}
+              {firestoreUser && (firestoreUser.role === "ORGANIZER" || firestoreUser.role === "SCANNER") && (
+                <Link href="/scanner">
+                  <Button variant="outline" className="border-yellow-400/50 text-yellow-200 bg-black hover:text-white hover:bg-yellow-800/20 hover:border-yellow-400">
+                    <Scan className="h-4 w-4 mr-2" />
+                    Scanner
+                  </Button>
+                </Link>
+              )}
               <Link href="/events/create">
                 <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold rounded-lg transition-all duration-300">
                   <Plus className="h-4 w-4 mr-2" />
@@ -99,13 +101,16 @@ export function Navbar() {
                         <Button variant="ghost" className="w-full justify-start text-lg py-6 text-yellow-400 hover:text-yellow-300 hover:bg-yellow-500/10">My Tickets</Button>
                       </Link>
                     </SheetClose>
-                    <SheetClose asChild>
-                      <Link href="/scanner" onClick={() => setOpen(false)}>
-                        <Button variant="outline" className="w-full justify-start text-lg py-6 border-yellow-400/50 text-yellow-200 hover:bg-yellow-800/20 hover:border-yellow-400">
-                          <Scan className="h-4 w-4 mr-2" />Scanner
-                        </Button>
-                      </Link>
-                    </SheetClose>
+                    {/* Only show Scanner for ORGANIZER or SCANNER roles */}
+                    {firestoreUser && (firestoreUser.role === "ORGANIZER" || firestoreUser.role === "SCANNER") && (
+                      <SheetClose asChild>
+                        <Link href="/scanner" onClick={() => setOpen(false)}>
+                          <Button variant="outline" className="w-full justify-start text-lg py-6 border-yellow-400/50 text-yellow-200 hover:bg-yellow-800/20 hover:border-yellow-400">
+                            <Scan className="h-4 w-4 mr-2" />Scanner
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                    )}
                     <SheetClose asChild>
                       <Link href="/events/create" onClick={() => setOpen(false)}>
                         <Button className="w-full justify-start text-lg py-6 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold rounded-lg">

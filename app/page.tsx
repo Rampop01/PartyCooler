@@ -14,7 +14,7 @@ import { motion, useScroll, useTransform } from "framer-motion"
 export default function HomePage() {
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(true)
-  const { civicUser } = useAuth()
+  const { civicUser, firestoreUser } = useAuth()
 
   // Scroll-linked motion values
   const { scrollYProgress } = useScroll()
@@ -32,7 +32,13 @@ export default function HomePage() {
   const loadEvents = async () => {
     try {
       const eventList = await getAllEvents()
-      setEvents(eventList)
+      // Sort by createdAt descending (newest first)
+      const sorted = eventList.sort((a, b) => {
+        const aTime = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bTime = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
+        return bTime - aTime;
+      });
+      setEvents(sorted)
     } catch (error) {
       console.error("Error loading events:", error)
     } finally {
@@ -130,29 +136,40 @@ export default function HomePage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in-up delay-400">
               {!civicUser ? (
                 <>
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-8 py-3 rounded-xl shadow-sm transition-colors duration-300"
-                  >
-                    <Plus className="mr-2 h-5 w-5" />
-                    Create Event
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="lg"
-                    className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 px-8 py-3 rounded-xl transition-colors duration-300"
-                  >
-                    <QrCode className="mr-2 h-5 w-5" />
-                    Scan Tickets
-                  </Button>
+                  <Link href="/login">
+                    <Button 
+                      size="lg" 
+                      className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-8 py-3 rounded-xl shadow-sm transition-colors duration-300"
+                    >
+                      <Users className="mr-2 h-5 w-5" />
+                      Login / Sign Up
+                    </Button>
+                  </Link>
                 </>
               ) : (
-                <Link href="/dashboard">
-                  <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-8 py-4 rounded-xl shadow-sm transition-colors duration-300">
-                    <Zap className="mr-2 h-5 w-5" />
-                    Go to Dashboard
-                  </Button>
-                </Link>
+                <>
+                  <Link href="/dashboard">
+                    <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold px-8 py-4 rounded-xl shadow-sm transition-colors duration-300">
+                      <Zap className="mr-2 h-5 w-5" />
+                      Go to Dashboard
+                    </Button>
+                  </Link>
+                  <Link href="/tickets">
+                    <Button size="lg" variant="outline" className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 px-8 py-4 rounded-xl transition-colors duration-300">
+                      <Ticket className="mr-2 h-5 w-5" />
+                      My Tickets
+                    </Button>
+                  </Link>
+                  {/* Only show Scan Tickets for ORGANIZER or SCANNER roles */}
+                  {firestoreUser && (firestoreUser.role === "ORGANIZER" || firestoreUser.role === "SCANNER") && (
+                    <Link href="/scanner">
+                      <Button size="lg" variant="outline" className="border-yellow-500 text-yellow-400 hover:bg-yellow-500/10 px-8 py-4 rounded-xl transition-colors duration-300">
+                        <QrCode className="mr-2 h-5 w-5" />
+                        Scan Tickets
+                      </Button>
+                    </Link>
+                  )}
+                </>
               )}
             </div>
           </motion.div>
@@ -409,6 +426,19 @@ export default function HomePage() {
           {loading ? (
             <div className="flex justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-500"></div>
+            </div>
+          ) : !civicUser ? (
+            <div className="text-center py-16">
+              <div className="bg-black/40 backdrop-blur-sm border border-yellow-500/20 rounded-2xl p-12 max-w-md mx-auto">
+                <Users className="h-16 w-16 text-gray-400 mx-auto mb-6" />
+                <h3 className="text-2xl font-bold text-white mb-4">Login or Sign Up to View Events</h3>
+                <p className="text-gray-300 mb-8">Please log in or create an account to see and register for available events.</p>
+                <Link href="/login">
+                  <Button className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black font-semibold">
+                    Login / Sign Up
+                  </Button>
+                </Link>
+              </div>
             </div>
           ) : events.length === 0 ? (
             <div className="text-center py-16">
